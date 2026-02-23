@@ -1,0 +1,79 @@
+package com.example.inventoryappmorgunleonard1;
+
+import android.Manifest;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Bundle;
+import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+
+public class SmsSettingsActivity extends AppCompatActivity {
+
+    private TextView textPermissionStatus;
+
+    // Modern permission request launcher (recommended)
+    private final ActivityResultLauncher<String> requestSmsPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+                updatePermissionStatusText(isGranted);
+                if (isGranted) {
+                    Toast.makeText(this, "SMS permission granted.", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, "SMS permission denied. App will still work without alerts.", Toast.LENGTH_SHORT).show();
+                }
+            });
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_sms_settings);
+
+        Button buttonCheck = findViewById(R.id.buttonCheckPermission);
+        Button buttonRequest = findViewById(R.id.buttonRequestPermission);
+        Button buttonBack = findViewById(R.id.buttonBackToInventory);
+        textPermissionStatus = findViewById(R.id.textPermissionStatus);
+
+        // Show current status on load
+        updatePermissionStatusText(isSmsPermissionGranted());
+
+        // CHECK button
+        buttonCheck.setOnClickListener(v -> {
+            boolean granted = isSmsPermissionGranted();
+            updatePermissionStatusText(granted);
+            Toast.makeText(this, granted ? "Permission is GRANTED" : "Permission is DENIED", Toast.LENGTH_SHORT).show();
+        });
+
+        // REQUEST button
+        buttonRequest.setOnClickListener(v -> {
+            if (isSmsPermissionGranted()) {
+                Toast.makeText(this, "SMS permission is already granted.", Toast.LENGTH_SHORT).show();
+            } else {
+                requestSmsPermissionLauncher.launch(Manifest.permission.SEND_SMS);
+            }
+        });
+
+        // BACK button
+        buttonBack.setOnClickListener(v -> {
+            startActivity(new Intent(SmsSettingsActivity.this, InventoryActivity.class));
+            finish();
+        });
+    }
+
+    private boolean isSmsPermissionGranted() {
+        return ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.SEND_SMS
+        ) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void updatePermissionStatusText(boolean granted) {
+        if (textPermissionStatus != null) {
+            textPermissionStatus.setText("Permission status: " + (granted ? "Granted" : "Denied"));
+        }
+    }
+}

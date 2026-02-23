@@ -1,0 +1,13 @@
+package com.example.inventoryappmorgunleonard1;
+
+public class InventoryItem {
+    public int id;
+    public String name;
+    public int qty;
+
+    public InventoryItem(int id, String name, int qty) {
+        this.id = id;
+        this.name = name;
+        this.qty = qty;
+    }
+}

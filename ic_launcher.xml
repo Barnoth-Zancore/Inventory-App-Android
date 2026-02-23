@@ -1,0 +1,146 @@
+package com.example.inventoryappmorgunleonard1;
+
+import android.Manifest;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.os.Bundle;
+import android.telephony.SmsManager;
+import android.widget.Button;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+
+public class InventoryActivity extends AppCompatActivity {
+
+    private static final int LOW_INVENTORY_THRESHOLD = 5;
+
+    // NOTE: For a real app, you would let the user enter their phone number.
+    // For this class project, this is a placeholder number.
+    private static final String ALERT_PHONE_NUMBER = "5551234567";
+
+    private DBHelper dbHelper;
+    private RecyclerView recyclerInventory;
+    private InventoryAdapter adapter;
+    private final ArrayList<InventoryItem> items = new ArrayList<>();
+
+    // Prevent repeated alerts during the same app session
+    private final HashSet<Integer> alertedItemIds = new HashSet<>();
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_inventory);
+
+        dbHelper = new DBHelper(this);
+
+        recyclerInventory = findViewById(R.id.recyclerInventory);
+        recyclerInventory.setLayoutManager(new LinearLayoutManager(this));
+
+        adapter = new InventoryAdapter(items, item -> {
+            boolean deleted = dbHelper.deleteItem(item.id);
+            if (deleted) {
+                Toast.makeText(this, "Item deleted", Toast.LENGTH_SHORT).show();
+                loadItems();
+            } else {
+                Toast.makeText(this, "Delete failed", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        recyclerInventory.setAdapter(adapter);
+
+        // Add Item button -> AddItemActivity
+        Button addButton = findViewById(R.id.buttonAddItem);
+        addButton.setOnClickListener(v -> {
+            Intent intent = new Intent(InventoryActivity.this, AddItemActivity.class);
+            startActivity(intent);
+        });
+
+        // Notifications button -> SmsSettingsActivity
+        Button notificationsButton = findViewById(R.id.buttonNotifications);
+        notificationsButton.setOnClickListener(v -> {
+            Intent intent = new Intent(InventoryActivity.this, SmsSettingsActivity.class);
+            startActivity(intent);
+        });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadItems();
+    }
+
+    private void loadItems() {
+        items.clear();
+
+        Cursor cursor = dbHelper.getAllItems();
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
+                int id = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.COL_ITEM_ID));
+                String name = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.COL_ITEM_NAME));
+                int qty = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.COL_ITEM_QTY));
+
+                InventoryItem item = new InventoryItem(id, name, qty);
+                items.add(item);
+
+                // SMS alert trigger (only if permission granted)
+                checkAndSendLowInventoryAlert(item);
+            }
+            cursor.close();
+        }
+
+        adapter.notifyDataSetChanged();
+    }
+
+    /**
+     * Sends an SMS alert when an item quantity is low (<= LOW_INVENTORY_THRESHOLD),
+     * but ONLY if SEND_SMS permission is granted.
+     * This method also prevents repeat alerts for the same item during the same session.
+     */
+    private void checkAndSendLowInventoryAlert(InventoryItem item) {
+
+        // Only alert if low inventory
+        if (item.qty > LOW_INVENTORY_THRESHOLD) {
+            return;
+        }
+
+        // Prevent repeated alerts for the same item during this session
+        if (alertedItemIds.contains(item.id)) {
+            return;
+        }
+
+        // Check SMS permission
+        boolean granted = ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.SEND_SMS
+        ) == PackageManager.PERMISSION_GRANTED;
+
+        if (!granted) {
+            return; // App must still work without SMS
+        }
+
+        try {
+            String message = "Low inventory alert: " + item.name + " is at quantity " + item.qty;
+
+            SmsManager smsManager = SmsManager.getDefault();
+            smsManager.sendTextMessage(ALERT_PHONE_NUMBER, null, message, null, null);
+
+            // Mark as alerted so it won't resend repeatedly this session
+            alertedItemIds.add(item.id);
+
+            // Optional feedback (helpful during testing)
+            Toast.makeText(this, "SMS alert sent for low inventory.", Toast.LENGTH_SHORT).show();
+
+        } catch (Exception e) {
+            // If SMS fails, app should continue functioning
+            Toast.makeText(this, "SMS failed to send.", Toast.LENGTH_SHORT).show();
+            e.printStackTrace();
+        }
+    }
+}

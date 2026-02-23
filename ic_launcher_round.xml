@@ -1,0 +1,74 @@
+package com.example.inventoryappmorgunleonard1;
+
+import android.content.Intent;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
+
+import java.util.List;
+
+public class InventoryAdapter extends RecyclerView.Adapter<InventoryAdapter.ViewHolder> {
+
+    public interface OnDeleteClick {
+        void onDelete(InventoryItem item);
+    }
+
+    private final List<InventoryItem> items;
+    private final OnDeleteClick deleteClick;
+
+    public InventoryAdapter(List<InventoryItem> items, OnDeleteClick deleteClick) {
+        this.items = items;
+        this.deleteClick = deleteClick;
+    }
+
+    @NonNull
+    @Override
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View v = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.row_inventory_item, parent, false);
+        return new ViewHolder(v);
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+        InventoryItem item = items.get(position);
+
+        holder.textItemName.setText(item.name);
+        holder.textQty.setText(String.valueOf(item.qty));
+
+        // Delete button behavior
+        holder.buttonDelete.setOnClickListener(v -> deleteClick.onDelete(item));
+
+        // Tap anywhere on the row to edit
+        holder.itemView.setOnClickListener(v -> {
+            Intent intent = new Intent(v.getContext(), EditItemActivity.class);
+            intent.putExtra(EditItemActivity.EXTRA_ITEM_ID, item.id);
+            intent.putExtra(EditItemActivity.EXTRA_ITEM_NAME, item.name);
+            intent.putExtra(EditItemActivity.EXTRA_ITEM_QTY, item.qty);
+            v.getContext().startActivity(intent);
+        });
+    }
+
+    @Override
+    public int getItemCount() {
+        return items.size();
+    }
+
+    public static class ViewHolder extends RecyclerView.ViewHolder {
+        TextView textItemName;
+        TextView textQty;
+        Button buttonDelete;
+
+        public ViewHolder(@NonNull View itemView) {
+            super(itemView);
+            textItemName = itemView.findViewById(R.id.textItemName);
+            textQty = itemView.findViewById(R.id.textQty);
+            buttonDelete = itemView.findViewById(R.id.buttonDelete);
+        }
+    }
+}

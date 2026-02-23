@@ -1,0 +1,74 @@
+package com.example.inventoryappmorgunleonard1;
+
+import android.os.Bundle;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+public class EditItemActivity extends AppCompatActivity {
+
+    public static final String EXTRA_ITEM_ID = "item_id";
+    public static final String EXTRA_ITEM_NAME = "item_name";
+    public static final String EXTRA_ITEM_QTY = "item_qty";
+
+    private DBHelper dbHelper;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_edit_item);
+
+        dbHelper = new DBHelper(this);
+
+        EditText editName = findViewById(R.id.editEditItemName);
+        EditText editQty = findViewById(R.id.editEditItemQty);
+        Button buttonUpdate = findViewById(R.id.buttonUpdateItem);
+        Button buttonCancel = findViewById(R.id.buttonCancelUpdate);
+
+        // Get item info passed from Inventory screen
+        int itemId = getIntent().getIntExtra(EXTRA_ITEM_ID, -1);
+        String currentName = getIntent().getStringExtra(EXTRA_ITEM_NAME);
+        int currentQty = getIntent().getIntExtra(EXTRA_ITEM_QTY, 0);
+
+        // If we didn't receive a valid id, bail out safely
+        if (itemId == -1) {
+            Toast.makeText(this, "Error: Item not found.", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
+        // Pre-fill fields
+        if (currentName != null) editName.setText(currentName);
+        editQty.setText(String.valueOf(currentQty));
+
+        buttonUpdate.setOnClickListener(v -> {
+            String newName = (editName.getText() == null) ? "" : editName.getText().toString().trim();
+            String newQtyStr = (editQty.getText() == null) ? "" : editQty.getText().toString().trim();
+
+            if (newName.isEmpty() || newQtyStr.isEmpty()) {
+                Toast.makeText(this, "Enter an item name and quantity.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            int newQty;
+            try {
+                newQty = Integer.parseInt(newQtyStr);
+            } catch (NumberFormatException e) {
+                Toast.makeText(this, "Quantity must be a number.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            boolean updated = dbHelper.updateItem(itemId, newName, newQty);
+            if (updated) {
+                Toast.makeText(this, "Item updated", Toast.LENGTH_SHORT).show();
+                finish(); // return to Inventory
+            } else {
+                Toast.makeText(this, "Error updating item", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        buttonCancel.setOnClickListener(v -> finish());
+    }
+}

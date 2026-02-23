@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".InventoryActivity">
+
+    <!-- Screen Title -->
+    <TextView
+        android:id="@+id/textInventoryTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Inventory"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:layout_marginTop="16dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Compact Notifications Button -->
+    <Button
+        android:id="@+id/buttonNotifications"
+        android:layout_width="wrap_content"
+        android:layout_height="36dp"
+        android:text="Alerts"
+        android:textSize="12sp"
+        android:minWidth="0dp"
+        android:minHeight="0dp"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:layout_marginEnd="16dp"
+        app:layout_constraintTop_toTopOf="@id/textInventoryTitle"
+        app:layout_constraintBottom_toBottomOf="@id/textInventoryTitle"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Column Headers -->
+    <TextView
+        android:id="@+id/headerItem"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Item"
+        android:textStyle="bold"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintTop_toBottomOf="@id/textInventoryTitle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/headerQty" />
+
+    <TextView
+        android:id="@+id/headerQty"
+        android:layout_width="80dp"
+        android:layout_height="wrap_content"
+        android:text="Qty"
+        android:textStyle="bold"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        app:layout_constraintTop_toBottomOf="@id/textInventoryTitle"
+        app:layout_constraintStart_toEndOf="@id/headerItem"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Inventory List -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerInventory"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        tools:listitem="@layout/row_inventory_item"
+        app:layout_constraintTop_toBottomOf="@id/headerItem"
+        app:layout_constraintBottom_toTopOf="@id/buttonAddItem"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Add Item Button -->
+    <Button
+        android:id="@+id/buttonAddItem"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:minHeight="48dp"
+        android:text="+ Add Item"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="24dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
